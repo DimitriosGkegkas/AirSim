@@ -57,10 +57,17 @@ void PIDPositionController::initialize_ros()
 
     std::string vehicle_name;
 
-    while (vehicle_name == "") {
-        nh_private_.getParam("/vehicle_name", vehicle_name);
-        ROS_INFO_STREAM("Waiting vehicle name");
+
+    nh_private_.getParam("vehicle_name", vehicle_name);
+
+    if(vehicle_name.empty())
+    {
+        ROS_ERROR("Failed to get param 'vehicle_name'");
+        ros::shutdown();
+        return;
     }
+
+    ROS_INFO_STREAM("Vehicle name: " << vehicle_name);
 
     // ROS publishers
     airsim_vel_cmd_world_frame_pub_ = nh_private_.advertise<airsim_ros_pkgs::VelCmd>("/airsim_node/" + vehicle_name + "/vel_cmd_world_frame", 1);
@@ -69,11 +76,13 @@ void PIDPositionController::initialize_ros()
     airsim_odom_sub_ = nh_.subscribe("/airsim_node/" + vehicle_name + "/odom_local_ned", 50, &PIDPositionController::airsim_odom_cb, this);
     home_geopoint_sub_ = nh_.subscribe("/airsim_node/home_geo_point", 50, &PIDPositionController::home_geopoint_cb, this);
     // todo publish this under global nodehandle / "airsim node" and hide it from user
-    local_position_goal_srvr_ = nh_.advertiseService("/airsim_node/local_position_goal", &PIDPositionController::local_position_goal_srv_cb, this);
-    local_position_goal_override_srvr_ = nh_.advertiseService("/airsim_node/local_position_goal/override", &PIDPositionController::local_position_goal_srv_override_cb, this);
-    gps_goal_srvr_ = nh_.advertiseService("/airsim_node/gps_goal", &PIDPositionController::gps_goal_srv_cb, this);
-    gps_goal_override_srvr_ = nh_.advertiseService("/airsim_node/gps_goal/override", &PIDPositionController::gps_goal_srv_override_cb, this);
+    ROS_INFO_STREAM("Subscribed to airsim odom and home geopoint");
+    local_position_goal_srvr_ = nh_.advertiseService("/airsim_node/" + vehicle_name + "/local_position_goal", &PIDPositionController::local_position_goal_srv_cb, this);
+    local_position_goal_override_srvr_ = nh_.advertiseService("/airsim_node/" + vehicle_name + "/local_position_goal/override", &PIDPositionController::local_position_goal_srv_override_cb, this);
+    gps_goal_srvr_ = nh_.advertiseService("/airsim_node/" + vehicle_name + "/gps_goal", &PIDPositionController::gps_goal_srv_cb, this);
+    gps_goal_override_srvr_ = nh_.advertiseService("/airsim_node/" + vehicle_name + "/gps_goal/override", &PIDPositionController::gps_goal_srv_override_cb, this);
 
+    ROS_INFO_STREAM("Advertised services for local and GPS goals");
     // ROS timers
     update_control_cmd_timer_ = nh_private_.createTimer(ros::Duration(update_control_every_n_sec), &PIDPositionController::update_control_cmd_timer_cb, this);
 }

@@ -5,5 +5,15 @@
 <!-- Vehicle Dynamic Constraints -->
 	<include file="$(find airsim_ros_pkgs)/launch/dynamic_constraints.launch"/>
 <!-- Simple PID Position Controller -->
-	<include file="$(find airsim_ros_pkgs)/launch/position_controller_simple.launch"/>
+	<group ns="drone_1">
+		<include file="$(find airsim_ros_pkgs)/launch/position_controller_simple.launch">
+			<arg name="vehicle_name" value="drone_1"/>
+		</include>
+	</group>
+
+	<group ns="drone_2">
+		<include file="$(find airsim_ros_pkgs)/launch/position_controller_simple.launch">
+			<arg name="vehicle_name" value="drone_2"/>
+		</include>
+	</group>
 </launch>
